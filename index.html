@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Jobclaw — AI Recruiting Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  /* ── Reset & Base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background: #0a0a0f;
+    color: #f0eff8;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ── Animations ── */
+  @keyframes fadeUp   { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes pulse    { 0%,100%{ opacity:1; } 50%{ opacity:.35; } }
+  @keyframes spin     { to { transform:rotate(360deg); } }
+  @keyframes blink    { 0%,100%{ opacity:1; } 50%{ opacity:.3; } }
+
+  .fade-up { animation: fadeUp .35s ease both; }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #2a2a38; border-radius: 4px; }
+
+  /* ── Layout ── */
+  #app {
+    height: 100vh;
+    display: grid;
+    grid-template-rows: 56px 1fr;
+    grid-template-columns: 220px 1fr;
+    grid-template-areas: "sidebar topbar" "sidebar main";
+  }
+
+  /* ── Sidebar ── */
+  #sidebar {
+    grid-area: sidebar;
+    background: #13131a;
+    border-right: 1px solid #2a2a38;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .logo-area {
+    padding: 16px 20px;
+    border-bottom: 1px solid #2a2a38;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: #ff6b35;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .logo-text {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    letter-spacing: .04em;
+    color: #f0eff8;
+    line-height: 1;
+  }
+  .logo-text em { color: #ff6b35; font-style: normal; }
+
+  .role-wrap { padding: 14px 12px 8px; flex-shrink: 0; }
+  .role-switch {
+    display: flex; gap: 4px;
+    background: #1c1c26;
+    padding: 3px;
+    border-radius: 10px;
+    border: 1px solid #2a2a38;
+  }
+  .role-btn {
+    flex: 1; padding: 5px 0;
+    border-radius: 7px; font-size: 12px; font-weight: 500;
+    cursor: pointer; transition: all .15s;
+    color: #8888a8; background: transparent; border: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .role-btn.active { background: #ff6b35; color: #fff; }
+
+  .nav-section {
+    padding: 14px 12px 6px;
+    font-size: 10px; font-weight: 500;
+    letter-spacing: .1em; color: #555568;
+    text-transform: uppercase; flex-shrink: 0;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; margin: 1px 8px;
+    border-radius: 8px; cursor: pointer;
+    font-size: 13px; color: #8888a8;
+    transition: all .15s;
+    border: 1px solid transparent;
+    user-select: none;
+  }
+  .nav-item:hover { background: #1c1c26; color: #f0eff8; }
+  .nav-item.active { background: #ff6b3520; color: #ff6b35; border-color: #ff6b3540; }
+  .nav-icon { width: 16px; text-align: center; font-size: 14px; flex-shrink: 0; }
+  .nav-badge {
+    margin-left: auto;
+    background: #ff6b35; color: #fff;
+    font-size: 10px; font-weight: 500;
+    padding: 2px 6px; border-radius: 10px;
+    min-width: 18px; text-align: center;
+  }
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 14px 12px;
+    border-top: 1px solid #2a2a38;
+    display: flex; align-items: center; gap: 8px;
+    flex-shrink: 0;
+  }
+  .avatar-sm {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: #ff6b3520; color: #ff6b35;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 500; flex-shrink: 0;
+  }
+
+  /* ── Topbar ── */
+  #topbar {
+    grid-area: topbar;
+    background: #13131a;
+    border-bottom: 1px solid #2a2a38;
+    padding: 0 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .topbar-title { font-size: 13px; color: #8888a8; }
+  .agent-status-chip {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: #00d4a0;
+  }
+  .live-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #00d4a0; animation: blink 2s ease infinite;
+  }
+
+  /* ── Main ── */
+  #main {
+    grid-area: main;
+    overflow-y: auto;
+    padding: 24px 28px;
+  }
+
+  /* ── Page header ── */
+  .page-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px; letter-spacing: .04em;
+    color: #f0eff8; margin-bottom: 4px;
+  }
+  .page-sub { font-size: 13px; color: #8888a8; margin-bottom: 20px; }
+
+  /* ── Agent status bar ── */
+  .agent-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 14px;
+    background: #00d4a010; border: 1px solid #00d4a025;
+    border-radius: 8px; margin-bottom: 16px;
+    font-size: 12px; color: #00d4a0;
+  }
+  .agent-bar-dot { width: 7px; height: 7px; border-radius: 50%; background: #00d4a0; animation: blink 2s infinite; }
+
+  /* ── Stat row ── */
+  .stat-row { display: flex; gap: 12px; margin-bottom: 20px; }
+  .stat-card {
+    flex: 1; background: #13131a;
+    border: 1px solid #2a2a38; border-radius: 12px; padding: 16px 18px;
+  }
+  .stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 36px; line-height: 1; letter-spacing: .02em; }
+  .stat-label { font-size: 11px; color: #8888a8; margin-top: 4px; }
+
+  /* ── Cards ── */
+  .card {
+    background: #13131a; border: 1px solid #2a2a38;
+    border-radius: 12px; padding: 18px 20px;
+    margin-bottom: 14px; transition: border-color .2s;
+  }
+  .card:hover { border-color: #3a3a50; }
+  .card-row { display: flex; gap: 14px; align-items: flex-start; }
+
+  /* ── Score ring ── */
+  .score-ring { position: relative; width: 52px; height: 52px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .score-ring svg { position: absolute; top: 0; left: 0; transform: rotate(-90deg); }
+  .score-ring-num { font-family: 'Bebas Neue', sans-serif; font-size: 16px; line-height: 1; position: relative; z-index: 1; }
+
+  /* ── Match bars ── */
+  .bar-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .bar-label { font-size: 11px; color: #8888a8; }
+  .bar-val { font-size: 11px; font-weight: 500; font-family: 'DM Mono', monospace; }
+  .bar-bg { height: 5px; background: #1c1c26; border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+  .bar-fill { height: 5px; border-radius: 3px; }
+
+  /* ── Badges ── */
+  .badge { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+  .badge-green  { background: #22c55e18; color: #22c55e; border: 1px solid #22c55e30; }
+  .badge-amber  { background: #f59e0b18; color: #f59e0b; border: 1px solid #f59e0b30; }
+  .badge-accent { background: #ff6b3520; color: #ff6b35; border: 1px solid #ff6b3540; }
+  .badge-teal   { background: #00d4a015; color: #00d4a0; border: 1px solid #00d4a030; }
+
+  /* ── Pills ── */
+  .pill { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 11px; margin: 2px; }
+  .pill-ok   { background: #22c55e12; color: #22c55e; border: 1px solid #22c55e25; }
+  .pill-warn { background: #f59e0b12; color: #f59e0b; border: 1px solid #f59e0b25; }
+
+  /* ── Buttons ── */
+  button { font-family: 'DM Sans', sans-serif; }
+  .btn {
+    padding: 8px 16px; border-radius: 8px;
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    transition: all .15s; border: 1px solid #2a2a38;
+    background: #1c1c26; color: #8888a8;
+  }
+  .btn:hover { border-color: #3a3a50; color: #f0eff8; }
+  .btn-sm { padding: 5px 12px; font-size: 11px; }
+  .btn-accent { background: #ff6b35; color: #fff; border-color: transparent; }
+  .btn-accent:hover { opacity: .88; }
+  .btn-outline { background: #ff6b3520; color: #ff6b35; border-color: #ff6b3540; }
+  .btn-outline:hover { background: #ff6b3540; }
+
+  /* ── Candidate avatar ── */
+  .c-avatar {
+    width: 38px; height: 38px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 500; flex-shrink: 0;
+  }
+
+  /* ── Summary text ── */
+  .summary-text { font-size: 12px; color: #8888a8; line-height: 1.65; margin: 10px 0; }
+
+  /* ── Actions row ── */
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* ── Section label ── */
+  .section-lbl {
+    font-size: 11px; font-weight: 500; color: #555568;
+    text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px;
+  }
+
+  /* ── Divider ── */
+  hr { border: none; border-top: 1px solid #2a2a38; margin: 14px 0; }
+
+  /* ── Chat ── */
+  #chat-page { display: flex; flex-direction: column; height: calc(100vh - 56px - 48px); }
+  .chat-messages {
+    flex: 1; overflow-y: auto; padding: 4px 0 16px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .msg-wrap { display: flex; flex-direction: column; }
+  .msg-wrap.user { align-items: flex-end; }
+  .msg-wrap.agent { align-items: flex-start; }
+  .msg-label { font-size: 10px; color: #555568; margin-bottom: 3px; letter-spacing: .05em; }
+  .bubble {
+    max-width: 82%; padding: 10px 14px; border-radius: 14px;
+    font-size: 13px; line-height: 1.6;
+    animation: fadeUp .2s ease;
+  }
+  .bubble.agent { background: #1c1c26; border: 1px solid #2a2a38; border-bottom-left-radius: 4px; }
+  .bubble.user  { background: #ff6b35; color: #fff; border-bottom-right-radius: 4px; }
+
+  .typing { display: flex; gap: 4px; align-items: center; padding: 10px 14px; background: #1c1c26; border: 1px solid #2a2a38; border-radius: 14px; border-bottom-left-radius: 4px; }
+  .typing span { width: 6px; height: 6px; border-radius: 50%; background: #555568; animation: blink 1.2s ease infinite; }
+  .typing span:nth-child(2) { animation-delay: .2s; }
+  .typing span:nth-child(3) { animation-delay: .4s; }
+
+  .chat-input-row {
+    display: flex; gap: 10px; align-items: flex-end;
+    padding-top: 14px; border-top: 1px solid #2a2a38; flex-shrink: 0;
+  }
+  #chat-input {
+    flex: 1; background: #1c1c26; border: 1px solid #2a2a38;
+    border-radius: 10px; padding: 10px 14px;
+    font-size: 13px; color: #f0eff8; font-family: 'DM Sans', sans-serif;
+    resize: none; min-height: 42px; max-height: 120px;
+    outline: none; line-height: 1.5; transition: border-color .15s;
+    overflow-y: auto;
+  }
+  #chat-input:focus { border-color: #ff6b35; }
+  #chat-input::placeholder { color: #555568; }
+  #send-btn {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: #ff6b35; border: none; cursor: pointer;
+    font-size: 18px; color: #fff; flex-shrink: 0;
+    transition: opacity .15s; display: flex; align-items: center; justify-content: center;
+  }
+  #send-btn:hover { opacity: .85; }
+  #send-btn:disabled { opacity: .35; cursor: not-allowed; }
+  .spinner {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 2px solid #ffffff40; border-top-color: #fff;
+    animation: spin .7s linear infinite;
+  }
+
+  /* ── Settings ── */
+  .toggle-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 11px 0; border-bottom: 1px solid #2a2a38;
+  }
+  .toggle-row:last-child { border-bottom: none; }
+  .toggle-label { font-size: 13px; }
+  .toggle-sub { font-size: 11px; color: #8888a8; margin-top: 2px; }
+  .chip {
+    padding: 3px 10px; border-radius: 6px;
+    font-size: 11px; font-weight: 500;
+    font-family: 'DM Mono', monospace; cursor: pointer;
+    border: none; transition: all .15s;
+  }
+  .chip-on  { background: #22c55e15; color: #22c55e; border: 1px solid #22c55e30; }
+  .chip-off { background: #1c1c26;   color: #555568; border: 1px solid #2a2a38; }
+
+  /* ── API key banner ── */
+  #api-banner {
+    background: #ff6b3512; border: 1px solid #ff6b3530;
+    border-radius: 10px; padding: 12px 16px; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  #api-key-input {
+    flex: 1; background: #1c1c26; border: 1px solid #2a2a38;
+    border-radius: 8px; padding: 7px 12px;
+    font-size: 12px; color: #f0eff8; font-family: 'DM Mono', monospace;
+    outline: none;
+  }
+  #api-key-input:focus { border-color: #ff6b35; }
+  #api-key-input::placeholder { color: #555568; }
+
+  /* ── Helpers ── */
+  .hidden { display: none !important; }
+  .mt4  { margin-top: 4px; }
+  .mt10 { margin-top: 10px; }
+  .mt12 { margin-top: 12px; }
+  .mt14 { margin-top: 14px; }
+  .flex-between { display: flex; justify-content: space-between; align-items: flex-start; }
+  .flex-center  { display: flex; align-items: center; }
+  .gap8  { gap: 8px; }
+  .gap10 { gap: 10px; }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ── SIDEBAR ─────────────────────────────────── -->
+  <aside id="sidebar">
+    <div class="logo-area">
+      <div class="logo-icon">⚡</div>
+      <div class="logo-text">JOB<em>CLAW</em></div>
+    </div>
+
+    <div class="role-wrap">
+      <div class="role-switch">
+        <button class="role-btn active" id="btn-seeker" onclick="setRole('seeker')">Job seeker</button>
+        <button class="role-btn"        id="btn-recruiter" onclick="setRole('recruiter')">Recruiter</button>
+      </div>
+    </div>
+
+    <div class="nav-section">Navigation</div>
+    <div id="nav-links"></div>
+
+    <div class="sidebar-footer">
+      <div class="avatar-sm" id="user-avatar">JS</div>
+      <div>
+        <div style="font-size:12px;font-weight:500;" id="user-name">Jamie Seeker</div>
+        <div style="font-size:10px;color:#555568;">Demo account</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── TOPBAR ──────────────────────────────────── -->
+  <header id="topbar">
+    <span class="topbar-title" id="topbar-title">Your matches</span>
+    <div class="agent-status-chip">
+      <div class="live-dot"></div>
+      Claw agent active
+    </div>
+  </header>
+
+  <!-- ── MAIN ───────────────────────────────────── -->
+  <main id="main">
+
+    <!-- Dashboard: seeker -->
+    <div id="page-seeker-dashboard" class="fade-up"></div>
+
+    <!-- Dashboard: recruiter -->
+    <div id="page-recruiter-dashboard" class="fade-up hidden"></div>
+
+    <!-- Chat -->
+    <div id="page-chat" class="hidden">
+      <h1 class="page-title">Agent chat</h1>
+      <p class="page-sub">Talk to Claw · your AI recruiting agent</p>
+
+      <div id="api-banner">
+        <span style="font-size:12px;color:#ff6b35;white-space:nowrap;">🔑 API key</span>
+        <input id="api-key-input" type="password" placeholder="Enter your Anthropic API key to activate Claw…"/>
+        <button class="btn btn-sm btn-accent" onclick="saveKey()">Save</button>
+      </div>
+
+      <div id="chat-page">
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-row">
+          <textarea id="chat-input" placeholder="Message Claw…" rows="1" onkeydown="handleChatKey(event)" oninput="autoResize(this)"></textarea>
+          <button id="send-btn" onclick="sendChat()" disabled>→</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div id="page-settings" class="hidden fade-up"></div>
+
+  </main>
+</div>
+
+<script>
+// ── State ────────────────────────────────────────────────────────────────────
+let ROLE = 'seeker';
+let PAGE = 'dashboard';
+let API_KEY = '';
+let chatHistory = [];
+let chatLoading = false;
+
+const SYSTEM_PROMPT = `You are Claw, the AI recruiting agent for Jobclaw — a platform where AI agents handle screening and matching between job seekers and recruiters so humans only engage when it truly matters.
+
+FOR JOB SEEKERS: Help them articulate their ideal role, preferences, salary range, culture fit, location, and career goals. Extract criteria to power automated matching. Be warm, conversational, and efficient. Ask one thing at a time. Once you have their criteria, confirm you'll handle screening and they'll only hear from you when there's a real match.
+
+FOR RECRUITERS: Help them define the role, required skills, team culture, comp band, and deal-breakers. Clarify what "great" looks like for this hire. Confirm their criteria so your agent can screen candidates automatically. Be direct and business-focused.
+
+ALWAYS:
+- Keep responses concise (2–4 sentences max usually)
+- Be specific and actionable
+- Reference that you (the agent) will handle the work so they don't have to check back
+- Occasionally reference agent-to-agent negotiation capabilities
+- Feel like a sharp, knowledgeable recruiting professional who happens to be an AI
+- Use the name "Claw" if asked your name
+- The platform is called Jobclaw`;
+
+// ── Data ─────────────────────────────────────────────────────────────────────
+const seekerMatches = [
+  {
+    role: 'Senior Frontend Engineer', company: 'Vercel', loc: 'Remote', comp: '$160–195k',
+    score: 94, color: '#22c55e', badge: 'badge-green', badgeLabel: 'Strong match',
+    bars: [{ l:'Skills alignment',v:97 },{ l:'Compensation fit',v:88 },{ l:'Culture signals',v:91 }],
+    summary: "Your agent spoke with Vercel's recruiter agent and confirmed React/TypeScript is required, flexibility on Node.js. Team runs async-first — aligns perfectly with your stated work preferences. Budget approved and they're actively hiring.",
+    pills: ['✓ React/TS expert','✓ Remote-first','✓ Async culture','✓ Comp aligned'],
+  },
+  {
+    role: 'Staff Engineer – Platform', company: 'Stripe', loc: 'Hybrid NYC', comp: '$200–240k',
+    score: 78, color: '#ff6b35', badge: 'badge-accent', badgeLabel: 'Review location',
+    bars: [{ l:'Skills alignment',v:85 },{ l:'Compensation',v:94 },{ l:'Location preference',v:58 }],
+    summary: "Exceptional compensation and technical scope. Location is a partial mismatch — you prefer remote-first but Stripe requires 3 days/week in NYC. Your agent can negotiate a remote exception before you engage.",
+    pills: ['✓ High comp','✓ Strong brand','⚠ NYC hybrid','✓ Scale challenge'],
+  },
+  {
+    role: 'Principal Engineer', company: 'Linear', loc: 'Remote', comp: '$190–220k',
+    score: 88, color: '#00d4a0', badge: 'badge-teal', badgeLabel: 'Good fit',
+    bars: [{ l:'Skills alignment',v:92 },{ l:'Team size fit',v:86 },{ l:'Mission alignment',v:84 }],
+    summary: "Linear's recruiter agent confirmed this is a greenfield infrastructure role. Small eng team (18 people), strong autonomy culture. Equity structure is competitive. They prefer async interviews.",
+    pills: ['✓ Small team','✓ High autonomy','✓ Strong equity','✓ Async interviews'],
+  },
+];
+
+const recruiterCandidates = [
+  {
+    name: 'Sofia Laurent', initials: 'SL', avatarBg: '#f59e0b20', avatarColor: '#f59e0b',
+    title: 'Senior Product Designer', exp: '5 yrs · Linear, Notion',
+    score: 91, color: '#22c55e', badge: 'badge-green', badgeLabel: 'Top pick',
+    summary: "Sofia's agent confirmed active search, $150–170k expectation, prefers teams under 30. Figma/prototyping verified. Comfortable with equity structure. Available in 3 weeks. Passed all hard criteria.",
+    pills: ['✓ Figma expert','✓ Systems thinking','✓ Startup exp','⚠ No mobile native'],
+  },
+  {
+    name: 'James Kim', initials: 'JK', avatarBg: '#8b5cf620', avatarColor: '#8b5cf6',
+    title: 'Staff Product Designer', exp: '7 yrs · Airbnb, Uber',
+    score: 72, color: '#f59e0b', badge: 'badge-amber', badgeLabel: 'Comp mismatch',
+    summary: "Strong background but expects $210k+ — above current band by ~20%. His agent indicated openness to an equity offset conversation. Recommend only if there's band flexibility.",
+    pills: ['✓ Senior pedigree','✓ Scale experience','⚠ Comp gap $40k','✓ Figma advanced'],
+  },
+  {
+    name: 'Priya Menon', initials: 'PM', avatarBg: '#00d4a015', avatarColor: '#00d4a0',
+    title: 'UX Lead', exp: '6 yrs · Shopify, Intercom',
+    score: 85, color: '#00d4a0', badge: 'badge-teal', badgeLabel: 'Time-sensitive',
+    summary: "Strong research background with solid visual design. Her agent confirmed she's targeting product-led SaaS — matches your profile well. Active pipeline at 2 other companies; window is ~2 weeks.",
+    pills: ['✓ Research strong','✓ SaaS focused','✓ Comp aligned','⚠ Active pipeline'],
+  },
+];
+
+const agentPrefs = [
+  { key:'digest',       label:'Daily match digest',          sub:'Get a summary of new matches each morning',             on:true  },
+  { key:'negotiation',  label:'Agent-to-agent negotiation',  sub:'Allow your agent to negotiate terms on your behalf',    on:true  },
+  { key:'autoSchedule', label:'Auto-schedule on 90%+ match', sub:'Book intro calls without your approval',                on:false },
+  { key:'passive',      label:'Passive mode',                sub:'Be discoverable without actively applying',             on:true  },
+  { key:'learn',        label:'Preference learning',         sub:'Agent improves from your accept/decline history',       on:true  },
+];
+const recruiterPrefs = [
+  { key:'digest',       label:'Daily screening digest',      sub:'Receive shortlisted candidates each morning',           on:true  },
+  { key:'negotiation',  label:'Comp negotiation',            sub:'Agent negotiates comp bands with candidates',           on:true  },
+  { key:'autoSchedule', label:'Auto-schedule on 88%+ match', sub:'Book screens automatically for top matches',            on:false },
+  { key:'passive',      label:'Source passive candidates',   sub:'Reach out to candidates not actively looking',          on:true  },
+  { key:'learn',        label:'Preference learning',         sub:'Agent improves from your hire/pass history',            on:true  },
+];
+const prefState = {};
+[...agentPrefs, ...recruiterPrefs].forEach(p => prefState[p.key] = p.on);
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+const NAV = {
+  seeker:    [{ id:'dashboard', icon:'◈', label:'Matches', badge:3 }, { id:'chat', icon:'◎', label:'Agent chat' }, { id:'settings', icon:'⊞', label:'Agent settings' }],
+  recruiter: [{ id:'dashboard', icon:'◈', label:'Pipeline', badge:3 }, { id:'chat', icon:'◎', label:'Agent chat' }, { id:'settings', icon:'⊞', label:'Agent settings' }],
+};
+
+function buildNav() {
+  const container = document.getElementById('nav-links');
+  container.innerHTML = NAV[ROLE].map(item => `
+    <div class="nav-item ${PAGE === item.id ? 'active' : ''}" id="nav-${item.id}" onclick="setPage('${item.id}')">
+      <span class="nav-icon">${item.icon}</span>
+      <span>${item.label}</span>
+      ${item.badge ? `<span class="nav-badge">${item.badge}</span>` : ''}
+    </div>
+  `).join('');
+}
+
+function setRole(r) {
+  ROLE = r;
+  PAGE = 'dashboard';
+  document.getElementById('btn-seeker').classList.toggle('active', r === 'seeker');
+  document.getElementById('btn-recruiter').classList.toggle('active', r === 'recruiter');
+  document.getElementById('user-avatar').textContent = r === 'seeker' ? 'JS' : 'HR';
+  document.getElementById('user-name').textContent = r === 'seeker' ? 'Jamie Seeker' : 'Taylor Recruiter';
+  resetChat();
+  render();
+}
+
+function setPage(p) {
+  PAGE = p;
+  render();
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────────
+function render() {
+  buildNav();
+  // hide all pages
+  ['seeker-dashboard','recruiter-dashboard','chat','settings'].forEach(id => {
+    const el = document.getElementById('page-' + id);
+    if (el) el.classList.add('hidden');
+  });
+
+  const titles = { dashboard: ROLE === 'seeker' ? 'Your matches' : 'Candidate pipeline', chat: 'Agent chat', settings: 'Agent settings' };
+  document.getElementById('topbar-title').textContent = titles[PAGE] || '';
+
+  if (PAGE === 'dashboard') {
+    if (ROLE === 'seeker') {
+      const el = document.getElementById('page-seeker-dashboard');
+      el.classList.remove('hidden');
+      el.innerHTML = renderSeekerDashboard();
+    } else {
+      const el = document.getElementById('page-recruiter-dashboard');
+      el.classList.remove('hidden');
+      el.innerHTML = renderRecruiterDashboard();
+    }
+  } else if (PAGE === 'chat') {
+    document.getElementById('page-chat').classList.remove('hidden');
+    if (chatHistory.length === 0) initChat();
+  } else if (PAGE === 'settings') {
+    const el = document.getElementById('page-settings');
+    el.classList.remove('hidden');
+    el.innerHTML = renderSettings();
+  }
+}
+
+// ── Score Ring ────────────────────────────────────────────────────────────────
+function scoreRingHTML(score, color) {
+  const r = 22, circ = 2 * Math.PI * r, dash = (score / 100) * circ;
+  return `
+    <div class="score-ring">
+      <svg width="52" height="52" viewBox="0 0 52 52">
+        <circle cx="26" cy="26" r="${r}" fill="none" stroke="#2a2a38" stroke-width="3"/>
+        <circle cx="26" cy="26" r="${r}" fill="none" stroke="${color}" stroke-width="3"
+          stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}" stroke-linecap="round"/>
+      </svg>
+      <span class="score-ring-num" style="color:${color}">${score}</span>
+    </div>`;
+}
+
+// ── Match Bars ────────────────────────────────────────────────────────────────
+function barsHTML(bars, color) {
+  return bars.map(b => `
+    <div class="bar-row"><span class="bar-label">${b.l}</span><span class="bar-val" style="color:${color}">${b.v}%</span></div>
+    <div class="bar-bg"><div class="bar-fill" style="width:${b.v}%;background:${color}"></div></div>
+  `).join('');
+}
+
+// ── Pills ─────────────────────────────────────────────────────────────────────
+function pillsHTML(pills) {
+  return pills.map(p => `<span class="pill ${p.startsWith('⚠') ? 'pill-warn' : 'pill-ok'}">${p}</span>`).join('');
+}
+
+// ── Seeker Dashboard ──────────────────────────────────────────────────────────
+function renderSeekerDashboard() {
+  const cards = seekerMatches.map((m, i) => `
+    <div class="card" style="border-left:3px solid ${m.color};animation-delay:${i*80}ms" class="fade-up">
+      <div class="card-row">
+        ${scoreRingHTML(m.score, m.color)}
+        <div style="flex:1">
+          <div class="flex-between">
+            <div>
+              <div style="font-weight:500;font-size:15px">${m.role}</div>
+              <div style="font-size:12px;color:#8888a8;margin-top:2px">${m.company} · ${m.loc} · ${m.comp}</div>
+            </div>
+            <span class="badge ${m.badge}">${m.badgeLabel}</span>
+          </div>
+          <div style="margin-top:10px">${barsHTML(m.bars, m.color)}</div>
+          <p class="summary-text">${m.summary}</p>
+          <div style="margin-bottom:12px">${pillsHTML(m.pills)}</div>
+          <div class="actions">
+            <button class="btn btn-sm btn-outline" onclick="setPage('chat')">Ask agent to dig deeper</button>
+            <button class="btn btn-sm btn-accent">Proceed to intro →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  return `
+    <h1 class="page-title">Your matches</h1>
+    <p class="page-sub">Your agent screened 47 roles this week · 3 surfaced for your review</p>
+    <div class="agent-bar"><div class="agent-bar-dot"></div>Agent active · last screened 12 min ago · monitoring 3 saved search criteria</div>
+    <div class="stat-row">
+      <div class="stat-card"><div class="stat-num" style="color:#00d4a0">3</div><div class="stat-label">New matches</div></div>
+      <div class="stat-card"><div class="stat-num">47</div><div class="stat-label">Auto-screened</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:#ff6b35">1</div><div class="stat-label">Needs your input</div></div>
+      <div class="stat-card"><div class="stat-num">2</div><div class="stat-label">In negotiation</div></div>
+    </div>
+    ${cards}`;
+}
+
+// ── Recruiter Dashboard ───────────────────────────────────────────────────────
+function renderRecruiterDashboard() {
+  const cards = recruiterCandidates.map((c, i) => `
+    <div class="card" style="border-left:3px solid ${c.color};animation-delay:${i*80}ms">
+      <div class="card-row">
+        ${scoreRingHTML(c.score, c.color)}
+        <div style="flex:1">
+          <div class="flex-between" style="margin-bottom:8px">
+            <div class="flex-center gap10">
+              <div class="c-avatar" style="background:${c.avatarBg};color:${c.avatarColor}">${c.initials}</div>
+              <div>
+                <div style="font-weight:500;font-size:15px">${c.name}</div>
+                <div style="font-size:12px;color:#8888a8;margin-top:1px">${c.exp}</div>
+              </div>
+            </div>
+            <span class="badge ${c.badge}">${c.badgeLabel}</span>
+          </div>
+          <p class="summary-text">${c.summary}</p>
+          <div style="margin-bottom:12px">${pillsHTML(c.pills)}</div>
+          <div class="actions">
+            <button class="btn btn-sm">View full profile</button>
+            <button class="btn btn-sm btn-outline" onclick="setPage('chat')">Negotiate via agent</button>
+            <button class="btn btn-sm btn-accent">Schedule intro →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  return `
+    <h1 class="page-title">Candidate pipeline</h1>
+    <p class="page-sub">Role: Senior Product Designer · Figma — 3 shortlisted from 89 screened</p>
+    <div class="agent-bar"><div class="agent-bar-dot"></div>Recruiter agent active · screening 89 applicants · 3 ready for your review</div>
+    <div class="stat-row">
+      <div class="stat-card"><div class="stat-num" style="color:#ff6b35">89</div><div class="stat-label">Screened</div></div>
+      <div class="stat-card"><div class="stat-num">3</div><div class="stat-label">Shortlisted</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:#22c55e">1</div><div class="stat-label">Ready to meet</div></div>
+      <div class="stat-card"><div class="stat-num">2</div><div class="stat-label">Negotiating</div></div>
+    </div>
+    ${cards}`;
+}
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+function renderSettings() {
+  const prefs = ROLE === 'seeker' ? agentPrefs : recruiterPrefs;
+  const toggleRows = prefs.map(p => `
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">${p.label}</div>
+        <div class="toggle-sub">${p.sub}</div>
+      </div>
+      <button class="chip ${prefState[p.key] ? 'chip-on' : 'chip-off'}" onclick="togglePref('${p.key}', this)">
+        ${prefState[p.key] ? 'ON' : 'OFF'}
+      </button>
+    </div>
+  `).join('');
+
+  const criteriaContent = ROLE === 'seeker'
+    ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+        ${['Remote-first','React/TypeScript','$150k+','Series B+','≤200 employees'].map(t => `<span class="pill pill-ok">${t}</span>`).join('')}
+       </div>
+       <button class="btn btn-sm btn-outline" onclick="setPage('chat')">Update via agent chat →</button>`
+    : `${'Senior Frontend Engineer · $150–190k · Remote,Product Designer · $120–160k · Hybrid OK'.split(',').map((r,i) => `
+        <div style="padding:8px 0;${i===0?'border-bottom:1px solid #2a2a38':''}; display:flex;justify-content:space-between;font-size:13px;align-items:center">
+          <span>${r}</span><span class="badge badge-green">Live</span>
+        </div>`).join('')}
+       <button class="btn btn-sm btn-outline" style="margin-top:12px" onclick="setPage('chat')">Add role →</button>`;
+
+  return `
+    <h1 class="page-title">Agent settings</h1>
+    <p class="page-sub">Configure how your AI agent works on your behalf</p>
+    <div class="card">
+      <div class="section-lbl" style="margin-bottom:14px">Automation preferences</div>
+      ${toggleRows}
+    </div>
+    <div class="card">
+      <div class="section-lbl" style="margin-bottom:12px">${ROLE === 'seeker' ? 'Current criteria' : 'Active roles'}</div>
+      ${criteriaContent}
+    </div>`;
+}
+
+function togglePref(key, btn) {
+  prefState[key] = !prefState[key];
+  btn.className = `chip ${prefState[key] ? 'chip-on' : 'chip-off'}`;
+  btn.textContent = prefState[key] ? 'ON' : 'OFF';
+}
+
+// ── Chat ──────────────────────────────────────────────────────────────────────
+function saveKey() {
+  const val = document.getElementById('api-key-input').value.trim();
+  if (val) {
+    API_KEY = val;
+    document.getElementById('api-banner').classList.add('hidden');
+    document.getElementById('chat-input').disabled = false;
+    updateSendBtn();
+  }
+}
+
+function initChat() {
+  chatHistory = [];
+  const greeting = ROLE === 'seeker'
+    ? "Hey! I'm Claw, your Jobclaw agent. I'll handle all the screening so you only hear from me when there's a real match worth your time. Let's set up your criteria — what kind of role are you looking for next?"
+    : "Hey — I'm Claw, your Jobclaw recruiting agent. I'll screen candidates and only surface the ones worth your time. Let's set up your first role. What's the title and key skills you need?";
+  chatHistory.push({ role: 'assistant', content: greeting });
+  renderMessages();
+}
+
+function resetChat() {
+  chatHistory = [];
+}
+
+function renderMessages() {
+  const container = document.getElementById('chat-messages');
+  if (!container) return;
+  container.innerHTML = chatHistory.map(m => `
+    <div class="msg-wrap ${m.role === 'user' ? 'user' : 'agent'}">
+      ${m.role === 'assistant' ? '<div class="msg-label">CLAW · AGENT</div>' : ''}
+      <div class="bubble ${m.role === 'user' ? 'user' : 'agent'}">${escapeHTML(m.content)}</div>
+    </div>
+  `).join('');
+  container.scrollTop = container.scrollHeight;
+}
+
+function addTyping() {
+  const container = document.getElementById('chat-messages');
+  if (!container) return;
+  const div = document.createElement('div');
+  div.className = 'msg-wrap agent'; div.id = 'typing-indicator';
+  div.innerHTML = '<div class="msg-label">CLAW · AGENT</div><div class="typing"><span></span><span></span><span></span></div>';
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function removeTyping() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+function updateSendBtn() {
+  const btn = document.getElementById('send-btn');
+  const input = document.getElementById('chat-input');
+  if (!btn || !input) return;
+  btn.disabled = chatLoading || !input.value.trim() || !API_KEY;
+}
+
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text || chatLoading || !API_KEY) return;
+
+  input.value = ''; input.style.height = 'auto';
+  chatHistory.push({ role: 'user', content: text });
+  renderMessages();
+  chatLoading = true;
+  updateSendBtn();
+  addTyping();
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYSTEM_PROMPT + `\n\nThe user is a ${ROLE === 'seeker' ? 'job seeker' : 'recruiter'}.`,
+        messages: chatHistory,
+      }),
+    });
+    const data = await res.json();
+    const reply = data.content?.find(b => b.type === 'text')?.text || 'Sorry, something went wrong. Try again.';
+    chatHistory.push({ role: 'assistant', content: reply });
+  } catch {
+    chatHistory.push({ role: 'assistant', content: 'Connection issue — please check your API key and try again.' });
+  } finally {
+    chatLoading = false;
+    removeTyping();
+    renderMessages();
+    updateSendBtn();
+  }
+}
+
+function handleChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+  else setTimeout(updateSendBtn, 10);
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  updateSendBtn();
+}
+
+function escapeHTML(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
